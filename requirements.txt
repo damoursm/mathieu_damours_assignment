@@ -1,0 +1,4 @@
+polars
+matplotlib
+plotly
+nbformat
