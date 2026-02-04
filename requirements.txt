@@ -2,3 +2,5 @@ polars
 matplotlib
 plotly
 nbformat
+lightgbm
+scikit-learn
