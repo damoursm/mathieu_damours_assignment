@@ -26,16 +26,16 @@ The project requires Python 3.10+ and the following libraries:
 *   `scikit-learn`: Machine learning utilities.
 *   `numpy`: Numerical computing.
 
-You can install them via pip:
+You can install them via `requirements.txt`:
 
 ```bash
-pip install polars plotly lightgbm scikit-learn numpy
+pip install -r requirements.txt
 ```
 
 ## Usage
 
 ### 1. Data Analysis & Engineering
-Open `engineering.ipynb` in Jupyter Notebook or VS Code. This notebook contains the complete workflow:
+The notebook `engineering.ipynb` contains the complete workflow:
 *   **Data Loading**: Reads the sales and inventory data.
 *   **Visualization**: Plots sales, inventory, and price trends over time.
 *   **Feature Engineering**: Creates features like stockout flags, lifecycle stages, and rolling metrics.

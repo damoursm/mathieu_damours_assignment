@@ -41,13 +41,12 @@ def train_lgbm(train_df: pl.DataFrame, test_df: pl.DataFrame, features: list[str
 
 def calculate_wmape(df: pl.DataFrame):
     """Calculates the Weighted Mean Absolute Percentage Error."""
-    # Ensure we don't divide by zero
-    valid_sales = df.filter(pl.col('sales') > 0)
-    
-    if valid_sales.height == 0:
+    # Use all days from the test set, including zero sales days
+    total_sales = df['sales'].sum()
+
+    if total_sales == 0:
         return None
 
-    numerator = np.abs(valid_sales['sales'] - valid_sales['forecast']).sum()
-    denominator = valid_sales['sales'].sum()
-    
-    return numerator / denominator if denominator > 0 else 0.0
+    numerator = np.abs(df['sales'] - df['forecast']).sum()
+
+    return numerator / total_sales
