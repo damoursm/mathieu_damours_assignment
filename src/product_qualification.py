@@ -11,19 +11,62 @@ def should_forecast_product(df: pl.DataFrame,
     """
     Determine if a product should be forecasted for each day based on rolling criteria.
 
+    This function evaluates daily records against multiple qualification criteria including
+    sales recency, inventory age, profitability, data quality, and stockout rates.
+
     Args:
-        df: Polars DataFrame with product time series data
-        min_recent_sales_days: Minimum days with sales in last 14 days
-        max_stockout_rate: Maximum acceptable stockout rate (rolling)
-        min_margin: Minimum acceptable average margin (rolling)
-        min_data_quality_pct: Minimum percentage of non-null critical fields (rolling)
-        max_inventory_age_days: Maximum days since launch to be relevant
-        history_window: Window size for rolling calculations (days)
+        df: Polars DataFrame with product time series data. Must contain columns:
+            'sales', 'date', 'launch_date', 'margin', 'inventory', 'current_price', 'cost'.
+        min_recent_sales_days: Minimum days with sales > 0 in the last 14 days.
+        max_stockout_rate: Maximum acceptable stockout rate (rolling window).
+        min_margin: Minimum acceptable average margin (rolling window).
+        min_data_quality_pct: Minimum percentage of non-null critical fields (rolling window).
+        max_inventory_age_days: Maximum days since launch for the product to be considered relevant.
+        history_window: Window size in days for rolling calculations (default: 28).
 
     Returns:
-        DataFrame with added columns indicating qualification status and reasons.
+        pl.DataFrame: The input DataFrame with additional boolean columns indicating
+        qualification status for each criterion and a final 'should_forecast' column.
+
+    Raises:
+        ValueError: If the input DataFrame is missing required columns.
+        TypeError: If the input is not a Polars DataFrame.
+
+    Example:
+        >>> import polars as pl
+        >>> from datetime import date
+        >>> data = {
+        ...     'date': [date(2024, 1, i) for i in range(1, 30)],
+        ...     'sales': [10] * 29,
+        ...     'launch_date': [date(2023, 12, 1)] * 29,
+        ...     'margin': [0.5] * 29,
+        ...     'inventory': [100] * 29,
+        ...     'current_price': [20.0] * 29,
+        ...     'cost': [10.0] * 29
+        ... }
+        >>> df = pl.DataFrame(data)
+        >>> result = should_forecast_product(df)
+        >>> result.select('should_forecast').tail(1).item()
+        True
     """
-    
+    # Input Validation
+    if not isinstance(df, pl.DataFrame):
+        raise TypeError("Input 'df' must be a Polars DataFrame.")
+
+    required_cols = {'sales', 'date', 'launch_date', 'margin', 'inventory', 'current_price', 'cost'}
+    missing_cols = required_cols - set(df.columns)
+    if missing_cols:
+        raise ValueError(f"Input DataFrame is missing required columns: {missing_cols}")
+
+    if df.height == 0:
+        # Return empty dataframe with expected schema if input is empty
+        # We need to add the new columns to match the return type structure
+        # For simplicity, just return the empty df, but ideally we should add the schema.
+        # Let's let the polars operations handle empty df naturally or return early.
+        return df.with_columns([
+            pl.lit(None).cast(pl.Boolean).alias('should_forecast')
+        ])
+
     # 1. Sales Recency (Last 14 days)
     # Count days with sales > 0 in last 14 days
     sales_recency = (
@@ -65,6 +108,8 @@ def should_forecast_product(df: pl.DataFrame,
         ).alias('rolling_stockout_rate')
     else:
         # Fallback if column missing (though it should be there from engineering step)
+        # We treat missing is_stockout as 0 rate (optimistic) or we could calculate it here if we had logic.
+        # Given the function scope, we'll default to 0.
         rolling_stockout = pl.lit(0.0).alias('rolling_stockout_rate')
     
     pass_stockout = (rolling_stockout <= max_stockout_rate).alias('pass_stockout_rate')
