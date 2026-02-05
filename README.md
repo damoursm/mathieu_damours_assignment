@@ -43,7 +43,7 @@ The notebook `engineering.ipynb` contains the complete workflow:
 *   **Model Comparison**: Trains and evaluates three forecasting approaches (Baseline, LGBM with lags, LGBM with engineered features).
 
 ### 2. Running Tests
-The unit tests for the product qualification logic are located in `tests/test_product_qualification.py`.
+The unit tests for the product qualification logic are located in `src/unit_tests.py`.
 You can run them directly from the command line:
 
 ```bash
@@ -56,11 +56,10 @@ Or run the last cell in `engineering.ipynb`, which executes the tests within the
 
 ### Product Qualification (`src/product_qualification.py`)
 Contains the `should_forecast_product` function, which evaluates a product's history against criteria such as:
-*   **Sales Recency**: Has the product sold recently?
-*   **Inventory Age**: Is the product too old?
+*   **Inventory Availability**: Is the product in inventory?
+*   **New Product**: Is it a new product?
+*   **Sales Recency**: For older products, do they still sell well?
 *   **Profitability**: Is the margin acceptable?
-*   **Data Quality**: Are there missing values?
-*   **Stockout Rate**: Is the product frequently out of stock?
 
 ### Forecasting Models (`src/models.py`)
 Implements the forecasting pipeline:
